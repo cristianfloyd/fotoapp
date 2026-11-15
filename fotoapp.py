@@ -83,6 +83,8 @@ def publicar_foto(ruta, red, archivo_salida=None):
   """Abre una foto, la adapta al tamaño de una red social y la guarda.
 
   ruta: archivo local (incluido Drive montado en Colab) o URL directa de una imagen.
+  Se aceptan rutas entre comillas, como las que pega el sistema al copiar la ruta
+  de un archivo o al arrastrarlo a la terminal.
   red: nombre o número del menú (YouTube, Instagram, Twitter o X, Facebook, TikTok,
   Pinterest, LinkedIn, Threads o Snapchat), sin distinguir mayúsculas.
 
@@ -96,6 +98,7 @@ def publicar_foto(ruta, red, archivo_salida=None):
   """
   if not isinstance(ruta, str) or not ruta.strip():
     raise ValueError('Ingrese una ruta o URL de imagen válida')
+  ruta = ruta.strip().strip('"\'').strip()
   red = _nombre_red(red)
   ancho, alto = REDES[red]
 
@@ -219,8 +222,9 @@ def boceto(image, metodo, invertir, umbral, kernel, umbral1=50, umbral2=150,
 
   metodo: Canny, Sobel, Laplaciano o Umbral, también por número (1 a 4).
   Canny usa umbral1 y umbral2 (0 <= umbral1 < umbral2 <= 255) y un núcleo de
-  3, 5 o 7. Sobel y Laplaciano usan umbral y un núcleo de 1, 3, 5, 7 o 9;
-  Umbral usa solo umbral. invertir intercambia negro y blanco (True da líneas
+  3, 5 o 7. Sobel y Laplaciano usan umbral y un núcleo de 1, 3, 5, 7 o 9; su
+  umbral se aplica a la intensidad del borde normalizada a 0-255, por lo que
+  no depende del tamaño del núcleo. Umbral usa solo umbral. invertir intercambia negro y blanco (True da líneas
   negras sobre fondo blanco). El resultado es binario (0 o 255). Muestra la
   original y el boceto lado a lado y guarda la figura en
   <foto>_boceto_<técnica>.png, o en archivo_salida si se indica.
@@ -259,6 +263,7 @@ def boceto(image, metodo, invertir, umbral, kernel, umbral1=50, umbral2=150,
     gx = cv2.Sobel(gris, cv2.CV_64F, 1, 0, ksize=kernel)
     gy = cv2.Sobel(gris, cv2.CV_64F, 0, 1, ksize=kernel)
     magnitud = np.sqrt(gx**2 + gy**2)
+    magnitud = cv2.normalize(magnitud, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     _, bordes = cv2.threshold(magnitud, umbral, 255, cv2.THRESH_BINARY)
   elif metodo == 'Laplaciano':
     laplaciano = np.abs(cv2.Laplacian(gris, cv2.CV_64F, ksize=kernel))
