@@ -1,6 +1,10 @@
 # FotoApp
 
-Trabajo de procesamiento de imágenes de Programación Python Avanzada. La aplicación permite adaptar fotografías a formatos de redes sociales, ajustar el contraste mediante ecualización del brillo, aplicar filtros de Pillow y generar bocetos con detección de bordes.
+**Programación Python Avanzada** — Tecnicatura Universitaria en Tecnologías de Programación, 2026
+
+**Autores:** Cristian Arenas y Álvaro Baiza
+
+Esta entrega corresponde a la primera parte del Proyecto 2: procesamiento de imágenes. La aplicación permite adaptar fotografías a formatos de redes sociales, ajustar el contraste mediante ecualización del brillo, aplicar filtros de Pillow y generar bocetos con detección de bordes.
 
 ## Archivos de la entrega
 
@@ -14,11 +18,12 @@ Trabajo de procesamiento de imágenes de Programación Python Avanzada. La aplic
 
 ## Preparación y ejecución
 
-Desde la carpeta del proyecto, crear y activar un entorno virtual e instalar las dependencias:
+Requiere Python 3.14. Desde la carpeta del proyecto, crear y activar un entorno virtual e instalar las dependencias:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate        # Linux y macOS
+.venv\Scripts\activate           # Windows
 python -m pip install -r requirements.txt
 ```
 
@@ -32,7 +37,7 @@ La aplicación se ejecuta en la computadora local. Permite seleccionar un archiv
 
 ## Fotografías y resultados
 
-La carpeta `imagenes/` contiene las fotografías de prueba y `results/` las figuras generadas por el notebook, que se reemplazan en cada ejecución. La aplicación guarda sus figuras en `results/app/`, que no forma parte del repositorio; la variable de entorno `FOTOAPP_SALIDA` permite elegir otro destino.
+La carpeta `imagenes/` contiene las fotografías de prueba y `results/` las figuras generadas por el notebook, que se reemplazan en cada ejecución. La aplicación guarda sus figuras en `results/app/`, que no forma parte del repositorio.
 
 Todas las fotografías son propias.
 
@@ -73,7 +78,7 @@ Las operaciones de procesamiento se habilitan después de una carga correcta. Ca
 ## Decisiones de procesamiento
 
 - La adaptación conserva las proporciones y centra la fotografía sobre un lienzo con márgenes gris medio RGB `(128, 128, 128)`.
-- Los formatos elegidos son YouTube 3840 × 2160, Instagram y Facebook 1080 × 1080, y Twitter/X 1200 × 675. Corresponden a los usos seleccionados para este trabajo, no a todos los formatos posibles de cada plataforma.
+- Los formatos de las redes pedidas son YouTube 3840 × 2160, Instagram y Facebook 1080 × 1080, y Twitter/X 1200 × 675. La aplicación ofrece además TikTok y Snapchat 1080 × 1920, Pinterest 1000 × 1500, LinkedIn 1200 × 627 y Threads 1080 × 1080. Corresponden a los usos seleccionados para este trabajo, no a todos los formatos posibles de cada plataforma.
 - La ecualización convierte la foto a HSV y modifica solo el brillo (V), conservando el tono (H) y la saturación (S). No recupera información ausente, y en las zonas muy oscuras puede hacer visible ruido de color.
 - Los márgenes se separan mediante coordenadas y no participan en el procesamiento ni en los histogramas.
 - La comparación de Sobel y Canny permite observar el efecto de los parámetros sobre los contornos del retrato.
