@@ -145,7 +145,7 @@ def pestana_adaptacion(imagen, sin_imagen):
 
 
 def pestana_contraste(imagen, sin_imagen):
-  st.write('Ecualiza la luminosidad usando el histograma de la foto.')
+  st.write('Ecualiza el brillo usando el histograma de la foto.')
   if st.button('Ecualizar', key='ecualizar', disabled=sin_imagen):
     def ecualizar():
       ruta = ruta_salida('ecualizada')

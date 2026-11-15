@@ -131,23 +131,23 @@ def _recomponer_contenido(imagen, contenido, area):
 
 
 def ecualizador(imagen, archivo_salida='comparacion_ecualizada.png'):
-  """Ecualiza solo la luminosidad Y de la fotografía y devuelve una imagen RGB.
+  """Ecualiza solo el brillo V de la fotografía en HSV y devuelve una imagen RGB.
 
-  Conserva Cb y Cr antes de volver a RGB; la conversión y la saturación pueden
-  introducir pequeñas variaciones cromáticas. No reconstruye detalle perdido.
+  Conserva el tono H y la saturación S antes de volver a RGB, de modo que se
+  mejora el contraste sin cambiar el color. No reconstruye detalle perdido.
   Los márgenes no participan en la ecualización ni en los histogramas.
-  Muestra y guarda el original, el resultado y sus histogramas de luminosidad.
+  Muestra y guarda el original, el resultado y sus histogramas de brillo.
   No modifica la entrada y conserva sus metadatos de contenido. Use nombres de
   salida diferentes para conservar las pruebas oscura y sobreexpuesta;
   repetir el mismo nombre reemplaza la figura anterior.
   """
   contenido, area = _extraer_contenido(imagen)
-  y, cb, cr = contenido.convert('YCbCr').split()
-  luminosidad = np.array(y)
-  y_ecualizada = Image.fromarray(cv2.equalizeHist(luminosidad))
-  contenido_ecualizado = Image.merge('YCbCr', (y_ecualizada, cb, cr)).convert('RGB')
+  hsv = cv2.cvtColor(np.array(contenido.convert('RGB')), cv2.COLOR_RGB2HSV)
+  h, s, brillo = cv2.split(hsv)
+  brillo_resultado = cv2.equalizeHist(brillo)
+  rgb_ecualizado = cv2.cvtColor(cv2.merge((h, s, brillo_resultado)), cv2.COLOR_HSV2RGB)
+  contenido_ecualizado = Image.fromarray(rgb_ecualizado)
   resultado = _recomponer_contenido(imagen, contenido_ecualizado, area)
-  luminosidad_resultado = np.array(contenido_ecualizado.convert('YCbCr'))[:, :, 0]
 
   figura, ejes = plt.subplots(2, 2, figsize=(12, 8))
   try:
@@ -156,16 +156,16 @@ def ecualizador(imagen, archivo_salida='comparacion_ecualizada.png'):
     ejes[0, 0].axis('off')
 
     ejes[0, 1].imshow(resultado)
-    ejes[0, 1].set_title('Imagen ecualizada - luminosidad')
+    ejes[0, 1].set_title('Imagen ecualizada - brillo')
     ejes[0, 1].axis('off')
 
     for eje, valores, titulo in (
-        (ejes[1, 0], luminosidad, 'Luminosidad original (sin márgenes)'),
-        (ejes[1, 1], luminosidad_resultado, 'Luminosidad resultante (sin márgenes)')):
+        (ejes[1, 0], brillo, 'Brillo original (sin márgenes)'),
+        (ejes[1, 1], brillo_resultado, 'Brillo resultante (sin márgenes)')):
       eje.hist(valores.ravel(), bins=np.arange(257), color='gray')
       eje.set_xlim(0, 256)
       eje.set_title(titulo)
-      eje.set_xlabel('Intensidad de luminosidad (Y)')
+      eje.set_xlabel('Brillo (V de HSV)')
       eje.set_ylabel('Cantidad de píxeles')
 
     figura.tight_layout()
