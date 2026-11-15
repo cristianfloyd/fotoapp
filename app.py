@@ -1,11 +1,14 @@
-"""Menú visual de FotoApp con Streamlit.
+"""Interfaz web opcional de FotoApp con Streamlit.
+
+Muestra cómo reutilizar las funciones del módulo fotoapp en una app web; el
+menú principal del trabajo es el de consola (python fotoapp.py).
 
 Ejecutar desde la carpeta del proyecto:
     python -m streamlit run app.py --server.address 127.0.0.1
 
 Todas las operaciones parten de la imagen adaptada por publicar_foto, que
-debe cargarse primero. Las figuras se guardan en la carpeta indicada por la
-variable de entorno FOTOAPP_SALIDA (por defecto, results/app).
+debe cargarse primero. La adaptación y las figuras se guardan en la carpeta
+indicada por la variable de entorno FOTOAPP_SALIDA (por defecto, fotos_mejoradas/app).
 """
 
 import os
@@ -41,7 +44,7 @@ ERRORES_ESPERADOS = (ValueError, OSError, requests.RequestException, cv2.error)
 
 
 def carpeta_salida():
-  carpeta = Path(os.environ.get('FOTOAPP_SALIDA', Path(__file__).with_name('results') / 'app'))
+  carpeta = Path(os.environ.get('FOTOAPP_SALIDA', Path(__file__).with_name('fotos_mejoradas') / 'app'))
   carpeta.mkdir(parents=True, exist_ok=True)
   return carpeta
 
@@ -63,32 +66,33 @@ def inicializar_estado():
   st.session_state.setdefault('resultados', {})
 
 
-def cargar_desde_archivo(archivo, red):
+def cargar_desde_archivo(archivo, red, archivo_salida):
   """Guarda la subida en un temporal; su nombre solo se usa como etiqueta."""
   sufijo = Path(archivo.name).suffix.lower()
   with tempfile.NamedTemporaryFile(suffix=sufijo, delete=False) as temporal:
     temporal.write(archivo.getvalue())
     ruta = temporal.name
   try:
-    return publicar_foto(ruta, red)
+    return publicar_foto(ruta, red, archivo_salida=archivo_salida)
   finally:
     os.remove(ruta)
 
 
 def cargar_imagen(origen, archivo, url, red):
+  ruta = ruta_salida(f'adaptada_{nombre_archivo(red)}')
   if origen == 'Archivo local':
     if archivo is None:
       raise ValueError('Seleccione un archivo de imagen')
-    imagen = cargar_desde_archivo(archivo, REDES[red])
+    imagen = cargar_desde_archivo(archivo, REDES[red], ruta)
     etiqueta = archivo.name
   else:
-    imagen = publicar_foto(url, REDES[red])
+    imagen = publicar_foto(url, REDES[red], archivo_salida=ruta)
     etiqueta = url.strip()
 
   st.session_state['imagen_activa'] = imagen
   st.session_state['entrada_activa'] = f'{etiqueta} · {red}'
   st.session_state['red_activa'] = red
-  st.session_state['resultados'] = {}
+  st.session_state['resultados'] = {'adaptacion': ruta}
 
 
 def ejecutar(operacion, clave, accion):
@@ -130,15 +134,9 @@ def panel_carga():
     st.sidebar.info(f"Imagen activa: {st.session_state['entrada_activa']}")
 
 
-def pestana_adaptacion(imagen, sin_imagen):
+def pestana_adaptacion(imagen):
   if imagen is not None:
     st.image(imagen, caption=f'{imagen.width} × {imagen.height} píxeles', width='stretch')
-  if st.button('Guardar adaptación', key='guardar_adaptacion', disabled=sin_imagen):
-    def guardar():
-      ruta = ruta_salida(f"adaptada_{nombre_archivo(st.session_state['red_activa'])}")
-      imagen.save(ruta)
-      return ruta
-    ejecutar('guardar la adaptación', 'adaptacion', guardar)
   ruta = st.session_state['resultados'].get('adaptacion')
   if ruta:
     st.caption(f'Guardado en {ruta}')
@@ -202,7 +200,7 @@ def main():
   adaptacion, contraste, filtro, bocetos = st.tabs(
     ['Adaptación', 'Contraste', 'Filtros', 'Boceto'])
   with adaptacion:
-    pestana_adaptacion(imagen, sin_imagen)
+    pestana_adaptacion(imagen)
   with contraste:
     pestana_contraste(imagen, sin_imagen)
   with filtro:
